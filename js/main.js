@@ -1,132 +1,83 @@
-// all inputs
-var signupName = document.getElementById('signupName')
-var signupEmail = document.getElementById('signupEmail')
-var signupPassword = document.getElementById('signupPassword')
-var signinEmail = document.getElementById('signinEmail')
-var signinPassword = document.getElementById('signinPassword')
-    // to get base url (localhost)
+var signupName = document.getElementById('signupName');
+var signupEmail = document.getElementById('signupEmail');
+var signupPassword = document.getElementById('signupPassword');
+var signinEmail = document.getElementById('signinEmail');
+var signinPassword = document.getElementById('signinPassword');
+
 var pathparts = location.pathname.split('/');
-var baseURL = ''
-for (var i = 0; i < pathparts.length - 1; i++) {
-    baseURL += '/' + pathparts[i]
-}
-console.log(baseURL);
+var baseURL = pathparts.slice(0, -1).join('/');
 
-// to say welcome in home page
-var username = localStorage.getItem('sessionUsername')
-if (username) {
-    document.getElementById('username').innerHTML = "Welcome " + username
+var username = localStorage.getItem('sessionUsername');
+if (username && document.getElementById('username')) {
+    document.getElementById('username').innerHTML = "Welcome " + username;
 }
 
-var signUpArray = []
-if (localStorage.getItem('users') == null) {
-    signUpArray = []
-} else {
-    signUpArray = JSON.parse(localStorage.getItem('users'))
-}
+var signUpArray = JSON.parse(localStorage.getItem('users')) || [];
 
-
-
-
-//for check inputs is empty or not
 function isEmpty() {
-
-    if (signupName.value == "" || signupEmail.value == "" || signupPassword.value == "") {
-        return false
-    } else {
-        return true
-    }
+    return signupName.value !== "" && signupEmail.value !== "" && signupPassword.value !== "";
 }
 
-
-
-
-
-// for check email is exist
 function isEmailExist() {
     for (var i = 0; i < signUpArray.length; i++) {
-        if (signUpArray[i].email.toLowerCase() == signupEmail.value.toLowerCase()) {
-            return false
+        if (signUpArray[i].email.toLowerCase() === signupEmail.value.toLowerCase()) {
+            return true;
         }
     }
+    return false;
 }
 
-
-
-
-
 function signUp() {
-    if (isEmpty() == false) {
-        document.getElementById('exist').innerHTML = '<span class="text-danger m-3">All inputs is required</span>'
-        return false
+    if (!isEmpty()) {
+        document.getElementById('exist').innerHTML = '<span class="text-danger m-3">All inputs are required</span>';
+        return;
     }
-    // to store all value as object
+
+    if (isEmailExist()) {
+        document.getElementById('exist').innerHTML = '<span class="text-danger m-3">Email already exists</span>';
+        return;
+    }
+
     var signUp = {
         name: signupName.value,
         email: signupEmail.value,
-        password: signupPassword.value,
-    }
-    if (signUpArray.length == 0) {
-        signUpArray.push(signUp)
-        localStorage.setItem('users', JSON.stringify(signUpArray))
-        document.getElementById('exist').innerHTML = '<span class="text-success m-3">Success</span>'
-        return true
-    }
-    if (isEmailExist() == false) {
-        document.getElementById('exist').innerHTML = '<span class="text-danger m-3">email already exists</span>'
+        password: signupPassword.value
+    };
 
-    } else {
-        signUpArray.push(signUp)
-        localStorage.setItem('users', JSON.stringify(signUpArray))
-        document.getElementById('exist').innerHTML = '<span class="text-success m-3">Success</span>'
-
-    }
-
-
+    signUpArray.push(signUp);
+    localStorage.setItem('users', JSON.stringify(signUpArray));
+    document.getElementById('exist').innerHTML = '<span class="text-success m-3">Success</span>';
 }
 
-
-
-
-// ============= for login================
-//for check inputs is empty or not
 function isLoginEmpty() {
-
-    if (signinPassword.value == "" || signinEmail.value == "") {
-        return false
-    } else {
-        return true
-    }
+    return signinEmail.value !== "" && signinPassword.value !== "";
 }
 
 function login() {
-    if (isLoginEmpty() == false) {
-        document.getElementById('incorrect').innerHTML = '<span class="text-danger m-3">All inputs is required</span>'
-        return false
+    if (!isLoginEmpty()) {
+        document.getElementById('incorrect').innerHTML = '<span class="text-danger m-3">All inputs are required</span>';
+        return;
     }
-    var password = signinPassword.value
-    var email = signinEmail.value
+
+    var email = signinEmail.value;
+    var password = signinPassword.value;
+    var userFound = false;
+
     for (var i = 0; i < signUpArray.length; i++) {
-        if (signUpArray[i].email.toLowerCase() == email.toLowerCase() && signUpArray[i].password.toLowerCase() == password.toLowerCase()) {
-            localStorage.setItem('sessionUsername', signUpArray[i].name)
-            if (baseURL == '/') {
-                location.replace('https://' + location.hostname + '/hello.html')
-
-            } else {
-                location.replace(baseURL + '/hello.html')
-
-            }
-        } else {
-            document.getElementById('incorrect').innerHTML = '<span class="p-2 text-danger">incorrect email or password</span>'
+        if (signUpArray[i].email.toLowerCase() === email.toLowerCase() && signUpArray[i].password === password) {
+            localStorage.setItem('sessionUsername', signUpArray[i].name);
+            location.replace(baseURL + '/hello.html');
+            userFound = true;
+            break;
         }
     }
 
+    if (!userFound) {
+        document.getElementById('incorrect').innerHTML = '<span class="p-2 text-danger">Incorrect email or password</span>';
+    }
 }
 
-
-
-
-// for logout
 function logout() {
-    localStorage.removeItem('sessionUsername')
+    localStorage.removeItem('sessionUsername');
+    location.replace(baseURL + '/index.html');
 }
